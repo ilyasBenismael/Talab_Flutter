@@ -5,7 +5,7 @@ class SettingsScreen extends StatefulWidget {
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
-
+//kol
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = false;
   String _logoutMsg = "";
