@@ -4,9 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:geolocator/geolocator.dart';
 
+
 class UserService {
+
+
+
   // Sign in with Google
-  static Future<String> signInWithGoogle() async {
+  static Future<int> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       final GoogleSignInAuthentication googleAuth =
@@ -16,11 +20,15 @@ class UserService {
         idToken: googleAuth.idToken,
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
-      return 'done';
+      return 1;
     } catch (e) {
-      return 'Error signing in with Google: $e';
+      print(e.toString());
+      return -1;
     }
   }
+
+
+
 
 
 
@@ -40,23 +48,26 @@ class UserService {
 
 
 
-
-
   static Future<Map<String, dynamic>?> getUserById(String id) async {
     try {
       DocumentSnapshot userSnapshot =
-      await FirebaseFirestore.instance.collection('users').doc(id).get();
+          await FirebaseFirestore.instance.collection('users').doc(id).get();
       if (userSnapshot.exists) {
         Map<String, dynamic> userData =
-        userSnapshot.data() as Map<String, dynamic>;
+            userSnapshot.data() as Map<String, dynamic>;
         return userData;
       } else {
+        print("user doesn't exists");
         return null;
       }
-    }catch(e){
+    } catch (e) {
+      print(e.toString());
       return null;
     }
   }
+
+
+
 
 
 
@@ -104,17 +115,22 @@ class UserService {
     }
   }
 
-  Future<String> registerUser(Map<String, dynamic> userInfos) async {
+
+
+
+
+  Future<int> registerUser(Map<String, dynamic> userInfos) async {
     if (userInfos['name'].isEmpty ||
         userInfos['city'].isEmpty ||
         userInfos['birthDay'] == null) {
-      return "Please fill in all required fields and select an image.";
+      print("Please fill in all required fields and select an image.");
+      return -1;
     }
 
     userInfos['birthDay'] = Timestamp.fromDate(userInfos['birthDay']);
 
     try {
-      //store the image file in firebasestorage and get its url
+      //store the image file in firebasestorage and get its url, if no image is choosed then downloadurl will still null
       String? downloadURL;
       if (userInfos['imageFile'] != null) {
         String fileName = DateTime.now().millisecondsSinceEpoch.toString();
@@ -139,11 +155,20 @@ class UserService {
         'phone': null,
         'favPosts': []
       });
-      return "done";
+      print("registering done");
+      return 1;
     } catch (e) {
-      return "Registration failed: $e";
+      print(e.toString());
+      return -2;
     }
   }
+
+
+
+
+
+
+
 
 
   //checking user auth, -1 if error, 0 if not auth, 1 if auth and not registered, 2 if both
@@ -170,6 +195,11 @@ class UserService {
 
 
 
+
+
+
+
+
   Future<int?> getUserRole() async {
     try {
       String? userId = FirebaseAuth.instance.currentUser?.uid;
@@ -191,6 +221,15 @@ class UserService {
     }
   }
 
+
+
+
+
+
+
+
+
+
   Future<String?> makeUserChef(Map<String, dynamic> userInfos) async {
     try {
       DocumentReference userRef = FirebaseFirestore.instance
@@ -202,6 +241,11 @@ class UserService {
       return "Error updating user fields: $e";
     }
   }
+
+
+
+
+
 
   static Future<List> getLocation() async {
     LocationPermission permission = await Geolocator.requestPermission();
@@ -219,4 +263,10 @@ class UserService {
       }
     }
   }
+
+
+
+
+
+
 }

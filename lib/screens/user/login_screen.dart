@@ -82,7 +82,12 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() {
       _isLoading = true; // Set loading state to true
     });
-    await UserService.signInWithGoogle();
+    int? result = await UserService.signInWithGoogle();
+    if(result == 1){
+      print("login done");
+    }else{
+      print("error while login");
+    }
     setState(() {
       _isLoading = false; // Set loading state to false when complete
     });

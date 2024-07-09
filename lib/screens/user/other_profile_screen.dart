@@ -26,6 +26,8 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
     super.initState();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +77,6 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
                                         )
                                       : Container(),
                                 ),
-                                // Use SizedBox if no image is picked
                               ],
                             ),
                             const SizedBox(height: 5),
@@ -155,7 +156,6 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
                             color: Colors.white,
                             size: 16,
                           ),
-                          // Icon
                           label: const Text(
                             'Message',
                             style: TextStyle(
@@ -249,6 +249,12 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
   }
 
 
+
+
+
+
+
+
   //we get the userdata then the posts of the user and if everything is good we return 1
   Future<int> getUserData(String userId) async {
     try {
@@ -262,6 +268,8 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
       return 0;
     }
   }
+
+
 
   void goToPost(BuildContext context, String id) async {
     Navigator.push(

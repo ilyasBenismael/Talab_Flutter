@@ -5,13 +5,12 @@ class SettingsScreen extends StatefulWidget {
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
-//kol
+
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = false;
-  String _logoutMsg = "";
   bool isAuthenticated = false;
   bool profileExists = false;
-//yooo
+
   @override
   void initState() {
     super.initState();
@@ -73,8 +72,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+
+
+
+
   //we set isAuth and profilexists based on response
-  //they stay false if user is not auth or if here was an error when checking userAuth
+  //they stay false if user is not auth or if there was an error when checking userAuth
   Future<void> checkUser() async {
     int a = await UserService.checkUserAuth();
     if (a == 1) {
@@ -87,23 +90,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
+
+
+
   Future<void> logout() async {
-    int? a;
-    setState(() {
-      _isLoading = true;
-    });
-    a = await UserService.logout();
-    setState(() {
-      _isLoading = false;
-    });
+    _isLoading = true;
+    setState(() {});
+
+    int? a = await UserService.logout();
+    _isLoading = false;
+    setState(() {});
 
     if (a == 1) {
+      print("logout done");
       Navigator.of(context).pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Logout error'),
-        duration: Duration(seconds: 2),
-      ));
+      print("logout error");
     }
   }
 }

@@ -141,17 +141,16 @@ class RegisterScreenState extends State<RegisterScreen> {
     };
 
     UserService().registerUser(userInfo).then((result) {
-      if (result == "done") {
+      if (result == 1) {
         Navigator.pop(context);
-      } else {
-        setState(() {
-          _errorMsg = result.toString();
-        });
       }
       _isLoading = false;
       setState(() {});
     });
   }
+
+
+
 
   void goToSettings(BuildContext context) {
     Navigator.push(
@@ -159,6 +158,9 @@ class RegisterScreenState extends State<RegisterScreen> {
       MaterialPageRoute(builder: (context) => SettingsScreen()),
     );
   }
+
+
+
 
   Future<void> _pickImage() async {
     if (_isLoading) {
@@ -172,6 +174,9 @@ class RegisterScreenState extends State<RegisterScreen> {
       _isLoading = false;
     });
   }
+
+
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -190,4 +195,9 @@ class RegisterScreenState extends State<RegisterScreen> {
       });
     }
   }
+
+
+
+
+
 }

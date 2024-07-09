@@ -10,15 +10,14 @@ class ProfilTab extends StatefulWidget {
   _ProfilTabState createState() => _ProfilTabState();
 }
 
-class _ProfilTabState extends State<ProfilTab> with AutomaticKeepAliveClientMixin<ProfilTab>
-{
-
+class _ProfilTabState extends State<ProfilTab>
+    with AutomaticKeepAliveClientMixin<ProfilTab> {
   @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
-     super.build(context);
+    super.build(context);
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
@@ -26,22 +25,17 @@ class _ProfilTabState extends State<ProfilTab> with AutomaticKeepAliveClientMixi
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (snapshot.data != null) {
+          return ProfileStreamWidget();
         } else {
-          if (snapshot.data != null) {
-            return ProfileStreamWidget();
-          } else {
-            return SignInScreen();
-          }
+          return SignInScreen();
         }
       },
     );
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////
-
-
 
 class ProfileStreamWidget extends StatefulWidget {
   @override

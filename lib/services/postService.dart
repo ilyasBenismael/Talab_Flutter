@@ -32,12 +32,15 @@ class PostService {
   }
 
 
-  static Future<List<DocumentSnapshot>?> getPostsByUser(String userId) async {
+  //returns null if error, an empty list [] if there is no posts , a list of docs
+  static Future<dynamic> getPostsByUser(String userId) async {
     try {
       CollectionReference postsRef = FirebaseFirestore.instance.collection('posts');
       QuerySnapshot querySnapshot = await postsRef.where('userId', isEqualTo: userId).get();
-      return querySnapshot.docs;
+        return querySnapshot.docs;
+
     } catch (e) {
+      print(e.toString());
       return null;
     }
   }
