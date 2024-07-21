@@ -88,6 +88,7 @@ class _SignInScreenState extends State<SignInScreen> {
     }else{
       print("error while login");
     }
+    if(!mounted){return;}
     setState(() {
       _isLoading = false; // Set loading state to false when complete
     });

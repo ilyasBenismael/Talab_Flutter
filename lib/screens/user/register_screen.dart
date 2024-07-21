@@ -28,6 +28,15 @@ class RegisterScreenState extends State<RegisterScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _cityController.dispose();
+    _descriptionController.dispose();
+    _dateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -119,15 +128,15 @@ class RegisterScreenState extends State<RegisterScreen> {
   }
 
 
-
+  //if still loading ma andiru walo, sinon ansettiwha l loading o nrebuildiw lpage o nsaviw luser
+  //then anchufu result o ansetiw lerror msg o ndiru
   void registerUser() {
     if (_isLoading) {
       return;
     }
-    setState(() {
-      _errorMsg = '';
-      _isLoading = true;
-    });
+    _errorMsg = '';
+    _isLoading = true;
+    setState(() {});
     final name = _nameController.text.trim();
     final city = _cityController.text.trim();
     final description = _descriptionController.text.trim();
@@ -140,15 +149,22 @@ class RegisterScreenState extends State<RegisterScreen> {
       'birthDay': _selectedDate
     };
 
+    //all this bloc is exec asynch, if error we show it, if all good we popout
     UserService().registerUser(userInfo).then((result) {
-      if (result == 1) {
-        Navigator.pop(context);
+      if (!mounted) {
+        return;
       }
       _isLoading = false;
-      setState(() {});
+      if (result == -1) {
+        toastMsg('fill all fields');
+      } else if (result == 1) {
+        Navigator.pop(context);
+      } else {
+        toastMsg('unexpected error happened');
+      }
+        setState(() {});
     });
   }
-
 
 
 
@@ -161,40 +177,67 @@ class RegisterScreenState extends State<RegisterScreen> {
 
 
 
-
+  //we can do nothing while picking image (isloading is true)
+  //check if mounted before each setstate to avoid errors
   Future<void> _pickImage() async {
     if (_isLoading) {
       return;
     }
-    setState(() {
-      _isLoading = true;
-    });
+    _isLoading = true;
+
+    //the pickedimage will be  either null or contains the image
     _pickedImage = await Utilities.pickImage();
-    setState(() {
+
+    if(_pickedImage == null){
+      toastMsg("error while picking image");
+    }
       _isLoading = false;
-    });
+
+    setState(() {});
   }
 
 
 
-
+  //we cant pick when it's loading, and if there is an error in picking we show it to user
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null && pickedDate != _selectedDate) {
-      setState(() {
-        _selectedDate = pickedDate;
-        _dateController.text = _selectedDate!
-            .toString()
-            .substring(0, 10); // Update text field value
-      });
+    if (_isLoading) {
+      return;
+    }
+    try {
+      //when clicking the choose_date we make the show_date_picker object and the initial date will be the now date if no date is selected
+      final DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate ?? DateTime.now(),
+        firstDate: DateTime(1900),
+        lastDate: DateTime(2100),
+      );
+      //if a new date is picked we update the ui with the new picked date
+      //the selected_date is of type date but we show it as a string
+      if (pickedDate != null && pickedDate != _selectedDate && mounted) {
+        setState(() {
+          _selectedDate = pickedDate;
+          _dateController.text = _selectedDate!
+              .toString()
+              .substring(0, 10); // Update text field value
+        });
+      }
+    } catch (e) {
+      print('cant pick date: ' + e.toString());
     }
   }
+
+
+
+  toastMsg(String msg){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg)));
+  }
+
+
+
+
+
+
 
 
 

@@ -76,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 
 
-  //we set isAuth and profilexists based on response
+  //we set isAuth and profilexists based on response from checkuserauth
   //they stay false if user is not auth or if there was an error when checking userAuth
   Future<void> checkUser() async {
     int a = await UserService.checkUserAuth();
@@ -87,20 +87,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       isAuthenticated = true;
       profileExists = true;
     }
+    if(!mounted){return;}
     setState(() {});
   }
 
 
 
 
+  //if logout is done we popout if not we show error, and ofc we check mounted in async funcitons
   Future<void> logout() async {
     _isLoading = true;
     setState(() {});
-
     int? a = await UserService.logout();
     _isLoading = false;
-    setState(() {});
 
+    if(!mounted) {return;}
+    setState(() {});
     if (a == 1) {
       print("logout done");
       Navigator.of(context).pop();
@@ -108,4 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       print("logout error");
     }
   }
+
+
+
 }

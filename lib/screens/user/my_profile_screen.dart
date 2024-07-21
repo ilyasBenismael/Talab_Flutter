@@ -1,11 +1,13 @@
-import 'package:ecommerce/screens/post/postScreen.dart';
+import 'package:ecommerce/screens/post/post_screen.dart';
 import 'package:ecommerce/screens/widgets/postWidget.dart';
-import 'package:ecommerce/services/postService.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class MyProfileScreen extends StatefulWidget {
+  const MyProfileScreen({super.key});
+
   @override
   _MyProfileScreenState createState() => _MyProfileScreenState();
 }
@@ -15,13 +17,11 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   String id = FirebaseAuth.instance.currentUser!.uid;
   List<DocumentSnapshot>? posts = [];
 
-
   @override
   Widget build(BuildContext context) {
-    print("wakwaak");
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Profile'),
+        title: const Text('My Profile'),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance.collection('users').doc(id).get(),
@@ -29,11 +29,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
-            Map<String, dynamic> userData =
-                snapshot.data!.data() as Map<String, dynamic>;
+            Map<String, dynamic>? userData =
+                snapshot.data!.data() as Map<String, dynamic>?;
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -66,19 +64,23 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                 ),
                               ),
                               ClipOval(
-                                child: userData['imageUrl'] != null
-                                    ? Image.network(
-                                        userData['imageUrl'] ?? '',
+                                child: userData?['imageUrl'] != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: userData?['imageUrl'],
+                                        placeholder: (context, url) =>
+                                            Container(),
+                                        errorWidget: (context, url, error) =>
+                                            Container(),
+                                        fit: BoxFit.cover,
                                         width: 80,
                                         height: 80,
-                                        fit: BoxFit.cover,
                                       )
                                     : Container(),
                               ),
                             ],
                           ),
                           const SizedBox(height: 5),
-                          userData['note'] != null
+                          userData?['note'] != null
                               ? Row(children: [
                                   const Icon(
                                     Icons.star,
@@ -87,7 +89,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
-                                    userData['note'].toString(),
+                                    userData!['note'].toString(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 11.5,
@@ -103,7 +105,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            userData['name'] ?? '',
+                            userData?['name'] ?? '',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -111,7 +113,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            userData['city'] ?? '',
+                            userData?['city'] ?? '',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -119,17 +121,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            userData['number'] ?? '',
+                            userData?['number'] ?? '',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
                           ),
                           const SizedBox(height: 5),
-                          Container(
+                          SizedBox(
                             width: 240,
                             child: Text(
-                              userData['description'] ?? '',
+                              userData?['description'] ?? '',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
@@ -195,7 +197,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 50),
+                  const SizedBox(height: 50),
                   const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -208,27 +210,31 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   TextDecoration.underline, // Underline style
                             ))
                       ]),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 30),
                   Expanded(
-                    child: FutureBuilder<List<DocumentSnapshot>>(
-                      future: getUserPosts(id),
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('posts')
+                          .where('userId', isEqualTo: id)
+                          .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        } else if (snapshot.hasError || snapshot.data == null) {
-                          return Center(child: Text('Error'));
-                        } else if (snapshot.hasData && snapshot.data!.isEmpty) {
-                            return Center(child: Text('No posts'));
-                        }
-                        else if (snapshot.hasData) {
+                          return const CircularProgressIndicator();
+                        } else if (snapshot.hasData &&
+                            snapshot.data!.docs.isEmpty) {
+                          return const Text('No posts');
+                        } else if (snapshot.hasData && snapshot.data != null) {
+                          posts = snapshot.data!.docs;
                           return GridView.builder(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 3,
                             ),
                             itemCount: posts!.length,
                             itemBuilder: (context, index) {
-                              final post = posts![index].data() as Map<String, dynamic>;
+                              final post =
+                                  posts![index].data() as Map<String, dynamic>;
                               return GestureDetector(
                                 onTap: () {
                                   goToPost(context, posts![index].id);
@@ -237,9 +243,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               );
                             },
                           );
-                        }
-                        else {
-                          return const Center(child: Text('Unexpected error'));
+                        } else {
+                          return Center(
+                              child: Text(
+                                  ':( , ${snapshot.error ?? 'something unexpected happened'}'));
                         }
                       },
                     ),
@@ -248,23 +255,21 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
             );
           } else {
-            return const Center(child: Text('No data available'));
+            return Column(children: [
+              Text(':( , ${snapshot.error ?? 'something unexpected happened'}'),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {});
+                },
+                child: const Text('Retry'),
+              ),
+            ]);
           }
         },
       ),
     );
   }
-
-
-
-
-  Future<List<DocumentSnapshot>> getUserPosts(String id) async {
-    posts = await PostService.getPostsByUser(id);
-    posts ??= [];
-    return posts!;
-  }
-
-
 
   void goToPost(BuildContext context, String id) async {
     Navigator.push(
@@ -272,9 +277,4 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       MaterialPageRoute(builder: (context) => PostScreen(postId: id)),
     );
   }
-
-
-
-
-
 }

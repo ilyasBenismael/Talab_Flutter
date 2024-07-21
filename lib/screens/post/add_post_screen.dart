@@ -29,9 +29,23 @@ class _AddPostScreenState extends State<AddPostScreen> {
   @override
   void initState() {
     super.initState();
+    //these methods are both async so we build first with role and empty categ
+    //and then setstate is callled with new data
     setCategories();
     setUserRole();
   }
+
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _titleController.dispose();
+    _priceController.dispose();
+    _keywordsController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,17 +151,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       padding: EdgeInsets.all(10),
                       child: Column(
                         children: [
-                          Text(
+                          const Text(
                               'You are 1 step from becoming a chef so please fill these fields :',
-                              style: TextStyle(
+                              style:  TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
-                          SizedBox(
+                          const SizedBox(
                             height: 7,
                           ),
                           TextField(
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               hintText: 'Enter phone number',
                             ),
                           ),
@@ -183,15 +197,24 @@ class _AddPostScreenState extends State<AddPostScreen> {
     );
   }
 
+
   void toggleCategory(String categoryId) {
-    setState(() {
       if (selectedCategories.contains(categoryId)) {
         selectedCategories.remove(categoryId);
       } else {
         selectedCategories.add(categoryId);
       }
-    });
+      setState(() {});
   }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -203,10 +226,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
 
     // 2- first loading is set to true so we cant execute addpost again
-    setState(() {
-      _isLoading = true;
-      _addingPostMsg = "";
-    });
+    _isLoading = true;
+    _addingPostMsg = "";
+    setState(() {});
 
     // 3- we get user infos
     final title = _titleController.text.trim();
@@ -222,17 +244,15 @@ class _AddPostScreenState extends State<AddPostScreen> {
       'keywords': keywords,
     };
 
-
     if (postInfos['title'].isEmpty ||
         postInfos['price'].isEmpty ||
         postInfos['description'].isEmpty ||
         postInfos['categories'].isEmpty ||
         postInfos['keywords'].isEmpty ||
         postInfos['imageFile'] == null) {
-      setState(() {
-        _isLoading = false;
-        _addingPostMsg = "Please fill in all required fields and select an image";
-      });
+      _isLoading = false;
+      toastMsg("Please fill in all required fields and select an image");
+      setState(() {});
       return;
     }
 
@@ -240,76 +260,82 @@ class _AddPostScreenState extends State<AddPostScreen> {
     if (role == 0) {
       if (_phoneController.text.isEmpty || userLocation == null) {
         _isLoading = false;
-        _addingPostMsg = "Please fill in all required fields and select an image";
+        toastMsg("Please fill in all required fields and select an image");
         setState(() {});
         return;
       }
       Map<String, dynamic> userInfos = {
         'phone': _phoneController.text,
-        'note': 3.0,
+        'note': 0.0,
         'role': 1,
         'location': userLocation
       };
-      String? response1 = await UserService().makeUserChef(userInfos);
-      if (response1 != "done") {
+      int response1 = await UserService().makeUserChef(userInfos);
+
+      if(!mounted){
+        return;
+      }
+
+      //if user not updated we leave
+      if (response1 != 1) {
         _isLoading = false;
-        _addingPostMsg = response1;
-        setState(() {
-        });
+        _addingPostMsg = "error while saving";
+        setState(() {});
         return;
       }
     }
 
     //after all this we add the post to the database
     PostService.addPost(postInfos).then((result) {
-      if (result == "done") {
-        _addingPostMsg = result;
-        _isLoading = false;
-        setState(() {
-        });
+      if(!mounted){return;}
+      if (result == 1) {
         Navigator.pop(context);
       } else {
         _isLoading = false;
         setState(() {
-          _addingPostMsg = result;
+          _addingPostMsg = "error while saving";
         });
         return;
       }
     });
   }
 
+
+
   Future<void> _pickImage() async {
     if (_isLoading) {
       return;
     }
-    setState(() {
-      _isLoading = true;
-    });
+    _isLoading = true;
     _pickedImage = await Utilities.pickImage();
-    setState(() {
-      _isLoading = false;
-    });
+    if(_pickedImage == null) {
+      toastMsg("error while picking image");
+    }
+    _isLoading = false;
+    if(!mounted){return;}
+    setState(() {});
   }
 
-
-
-  //first thing we
   void setCategories() {
     FirebaseFirestore.instance
         .collection('categories')
         .get()
         .then((querySnapshot) {
-      setState(() {
-        categories = querySnapshot.docs;
-      });
+      if (!mounted) {
+        return;
+      }
+      categories = querySnapshot.docs;
+      setState(() {});
     });
   }
 
-
-
+  //if role != 1 or error it will remain 0
   void setUserRole() async {
     if (await UserService().getUserRole() == 1) {
       role = 1;
+    }
+    if (!mounted) {
+      return;
     }
     setState(() {});
   }
@@ -319,39 +345,34 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
 
 
-//the getLocation returns either error list [nbr] or list of lat and lon
+  toastMsg(String msg){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg)));
+  }
+
+
   void getUserLocation() async {
+    //if we already got location no need to get it again
     if (_isLoading || userLocation != null) {
       return;
     }
     _isLoading = true;
-    setState(() {
-      locationMsg = "";
-    });
+    locationMsg = "";
 
+    //if -1 or -2 we show error msg, else we set userlocation and set locationmsg
     List a = await UserService.getLocation();
+    if(!mounted){return;}
     if (a[0] == -1) {
-      _isLoading = true;
-      setState(() {
-        locationMsg = "u have to permit location access";
-      });
-      return;
+      _isLoading = false;
+      toastMsg("u have to permit location access");
     } else if (a[0] == -2) {
       _isLoading = false;
-      setState(() {
-        locationMsg = "error while getting user location";
-      });
-      return;
+      toastMsg("error while getting user location");
     } else {
       userLocation = a;
       _isLoading = false;
-      setState(() {
-        locationMsg = "lat: ${a[0]}, long: ${a[1]}";
-      });
+      locationMsg = "lat: ${a[0]}, long: ${a[1]}";
     }
+    setState(() {});
   }
-
-
-
-
 }

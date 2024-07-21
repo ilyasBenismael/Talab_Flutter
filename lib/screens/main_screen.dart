@@ -10,8 +10,7 @@ class MainScreen extends StatefulWidget {
   MainScreenState createState() => MainScreenState();
 }
 
-class MainScreenState extends State<MainScreen>{
-
+class MainScreenState extends State<MainScreen> {
   int _currentIndex = 1;
   final PageController _pageController = PageController(initialPage: 1);
   final List<Widget> pages = [
@@ -29,23 +28,25 @@ class MainScreenState extends State<MainScreen>{
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView(
-       onPageChanged: (index){
-         setState(() {
-           _currentIndex = index;
-         });
-        },
         controller: _pageController,
-       children: pages,
+        physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
+        children: pages,
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex, // Current tab index
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
-          _pageController.animateToPage(_currentIndex, duration: const Duration(milliseconds: 200), curve: Curves.bounceIn);
+          _pageController.animateToPage(
+            _currentIndex,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+          );
         },
+        backgroundColor: Colors.grey[850], // Dark-grey background color
+        selectedItemColor: Colors.white, // Color of the selected item
+        unselectedItemColor: Colors.grey[400], // Color of unselected items
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -60,11 +61,7 @@ class MainScreenState extends State<MainScreen>{
             label: 'Search',
           ),
         ],
-        selectedItemColor: Colors.black,
-        unselectedItemColor : Colors.grey,
       ),
     );
   }
-
-
 }

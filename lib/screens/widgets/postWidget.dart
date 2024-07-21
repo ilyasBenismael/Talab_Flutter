@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PostWidget extends StatelessWidget {
   final Map<String, dynamic> postInfos;
@@ -18,31 +19,26 @@ class PostWidget extends StatelessWidget {
         children: <Widget>[
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                // Apply top-left border radius to the image
-                topRight: Radius.circular(8), // Apply top-right border radius to the image
-              ),
-              child: postInfos['imageUrl'] != null
-                  ? Container(
-                      child: Container(
-                        color: const Color(0xFF212121),
-                        child: Image.network(
-                          postInfos['imageUrl'] ?? "",
-                          width: 120,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    )
-                  : Container()  ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+                child: Container(
+                  color: const Color(0xFFADADAD),
+                  child: CachedNetworkImage(
+                    imageUrl: postInfos['imageUrl'] ?? "",
+                    placeholder: (context, url) => Container(),
+                    errorWidget: (context, url, error) => Container(),
+                    fit: BoxFit.cover,
+                    width: 120,
+                  ),
+                )),
           ),
           Padding(
             padding: const EdgeInsets.all(5.0),
-            child: Container(
-              child: Text(
-                postInfos['title'] ?? "",
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
+            child: Text(
+              postInfos['title'] ?? "",
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
         ],

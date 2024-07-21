@@ -23,12 +23,12 @@ class _ProfilTabState extends State<ProfilTab>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (snapshot.data != null) {
+        }  else if (snapshot.data != null) {
           return ProfileStreamWidget();
-        } else {
+        } else if (snapshot.data == null){
           return SignInScreen();
+        }else {
+          return Center(child: Text(':( , ${snapshot.error ?? "unexpected error"}'));
         }
       },
     );

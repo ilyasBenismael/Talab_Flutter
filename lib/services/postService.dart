@@ -5,11 +5,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 class PostService {
 
 
-
-  static Future<String> addPost(Map<String, dynamic> postInfos) async {
+  static Future<int> addPost(Map<String, dynamic> postInfos) async {
     try {
       //store the image file in firebasestorage and get its url
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      String fileName = DateTime
+          .now()
+          .millisecondsSinceEpoch
+          .toString();
       Reference ref = FirebaseStorage.instance.ref().child('posts/$fileName');
       await ref.putFile(postInfos['imageFile']);
       String downloadURL = await ref.getDownloadURL();
@@ -25,9 +27,10 @@ class PostService {
         'userId': FirebaseAuth.instance.currentUser!.uid.toString(),
         'timeStamp': FieldValue.serverTimestamp()
       });
-      return "done";
+      return 1;
     } catch (e) {
-      return "adding post failed: $e";
+      print(e.toString());
+      return -1;
     }
   }
 
@@ -35,10 +38,11 @@ class PostService {
   //returns null if error, an empty list [] if there is no posts , a list of docs
   static Future<dynamic> getPostsByUser(String userId) async {
     try {
-      CollectionReference postsRef = FirebaseFirestore.instance.collection('posts');
-      QuerySnapshot querySnapshot = await postsRef.where('userId', isEqualTo: userId).get();
-        return querySnapshot.docs;
-
+      CollectionReference postsRef = FirebaseFirestore.instance.collection(
+          'posts');
+      QuerySnapshot querySnapshot = await postsRef.where(
+          'userId', isEqualTo: userId).get();
+      return querySnapshot.docs;
     } catch (e) {
       print(e.toString());
       return null;
@@ -46,14 +50,10 @@ class PostService {
   }
 
 
-
-
-
-
-
   static Future<Map<String, dynamic>?> getPostById(String postId) async {
     try {
-      DocumentSnapshot<Map<String, dynamic>> postSnapshot = await FirebaseFirestore.instance
+      DocumentSnapshot<
+          Map<String, dynamic>> postSnapshot = await FirebaseFirestore.instance
           .collection('posts')
           .doc(postId)
           .get();
@@ -81,7 +81,7 @@ class PostService {
       List favPosts = userData?['favPosts'] ?? [];
 
       //if it's empty there is no need to fetch anything
-      if(favPosts.isEmpty){
+      if (favPosts.isEmpty) {
         return [];
       }
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -98,7 +98,8 @@ class PostService {
       }).toList();
       return posts;
     } catch (error) {
-      print('whaat is thisyeyetdydt');
+      //if any error we return null
+      print(error.toString());
       return null;
     }
   }

@@ -1,6 +1,6 @@
 import 'package:ecommerce/screens/options/settings_screen.dart';
 import 'package:ecommerce/screens/options/terms_screen.dart';
-import 'package:ecommerce/screens/post/addPostScreen.dart';
+import 'package:ecommerce/screens/post/add_post_screen.dart';
 import 'package:ecommerce/screens/user/edit_profile_screen.dart';
 import 'package:ecommerce/screens/user/favoritesScreen.dart';
 import 'package:flutter/material.dart';

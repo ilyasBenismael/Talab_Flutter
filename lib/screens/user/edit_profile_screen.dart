@@ -31,6 +31,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   String? previousImgUrl;
   String locationMsg = '';
   bool isChef = false;
+  int stateVar = 0;
 
   @override
   void initState() {
@@ -44,112 +45,126 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         appBar: AppBar(
           title: const Text('Edit profile'),
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: <Widget>[
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipOval(
-                      child: _pickedImage != null
-                          ? Container(
-                              child: _isImgEdited
-                                  ? Image.file(
-                                      _pickedImage!,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.network(
-                                      _pickedImage!,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    ),
-                            )
-                          : Image.asset(
-                              'images/profileX.jpeg',
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                    IconButton(
-                      onPressed: _pickImage,
-                      icon: const Icon(
-                        Icons.camera_alt,
-                        size: 20,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                ),
-                TextField(
-                  controller: _cityController,
-                  decoration: const InputDecoration(labelText: 'City'),
-                ),
-                TextField(
-                  controller: _descriptionController,
-                  decoration:
-                      const InputDecoration(labelText: 'description(optional)'),
-                ),
-                TextField(
-                  controller: _dateController,
-                  readOnly: true,
-                  onTap: () => _selectDate(context),
-                  decoration: const InputDecoration(
-                    labelText: 'Select Date',
-                    prefixIcon: Icon(Icons.calendar_today),
-                  ),
-                ),
-                SizedBox(height: 7),
-                isChef
-                    ? Container(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
+        body: Builder(
+          builder: (context) {
+            if (stateVar == 0) {
+              return const CircularProgressIndicator();
+            } else if (stateVar == 1) {
+              return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: <Widget>[
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              decoration: InputDecoration(
-                                hintText: 'Enter phone number',
+                            ClipOval(
+                              child: _pickedImage != null
+                                  ? Container(
+                                child: _isImgEdited
+                                    ? Image.file(
+                                  _pickedImage!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                                    : Image.network(
+                                  _pickedImage!,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                                  : Image.asset(
+                                'images/profileX.jpeg',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            TextField(
-                              onTap: () {
-                                getUserLocation();
-                              },
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                hintText: locationMsg,
-                                prefixIcon: const Icon(Icons.map),
+                            IconButton(
+                              onPressed: _pickImage,
+                              icon: const Icon(
+                                Icons.camera_alt,
+                                size: 20,
+                                color: Colors.black,
                               ),
                             ),
                           ],
                         ),
-                      )
-                    : Container(),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: updateUser,
-                  child: const Text('Update User'),
-                ),
-                const SizedBox(height: 16),
-                _isLoading ? const CircularProgressIndicator() : Container(),
-                Text(_errorMsg),
-              ],
-            ),
-          ),
-        ));
+                        TextField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(labelText: 'Name'),
+                        ),
+                        TextField(
+                          controller: _cityController,
+                          decoration: const InputDecoration(labelText: 'City'),
+                        ),
+                        TextField(
+                          controller: _descriptionController,
+                          decoration:
+                          const InputDecoration(labelText: 'description(optional)'),
+                        ),
+                        TextField(
+                          controller: _dateController,
+                          readOnly: true,
+                          onTap: () => _selectDate(context),
+                          decoration: const InputDecoration(
+                            labelText: 'Select Date',
+                            prefixIcon: Icon(Icons.calendar_today),
+                          ),
+                        ),
+                        SizedBox(height: 7),
+                        isChef
+                            ? Container(
+                          padding: EdgeInsets.all(10),
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _phoneController,
+                                keyboardType: TextInputType.phone,
+                                decoration: InputDecoration(
+                                  hintText: 'Enter phone number',
+                                ),
+                              ),
+                              TextField(
+                                onTap: () {
+                                  getUserLocation();
+                                },
+                                readOnly: true,
+                                decoration: InputDecoration(
+                                  hintText: locationMsg,
+                                  prefixIcon: const Icon(Icons.map),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                            : Container(),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: updateUser,
+                          child: const Text('Update User'),
+                        ),
+                        const SizedBox(height: 16),
+                        _isLoading ? const CircularProgressIndicator() : Container(),
+                        Text(_errorMsg),
+                      ],
+                    ),
+                  ),
+                );
+            } else {
+              return const Text('Error');
+            }
+          },
+        )
+    );
   }
+
+
+
 
 
 
@@ -158,7 +173,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   void updateUser() {
     //if it's still loading from previous update we return
     if (_isLoading) {
-      return;}
+      return;
+    }
 
     //first thing we make the ui of a loading page
     _errorMsg = '';
@@ -190,7 +206,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     //if it's a chef we update chef fields and check their emptiness
-     if (isChef) {
+    if (isChef) {
       userInfo['location'] = location;
       userInfo['phone'] = _phoneController.text.trim();
 
@@ -203,11 +219,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     //we update the user, if there is an error we show it and return, if it's okey we go to previous page
-    UserService
-        .updateUser(userInfo, _isImgEdited, previousImgUrl)
+    UserService.updateUser(userInfo, _isImgEdited, previousImgUrl)
         .then((result) {
       _isLoading = false;
-      if (result == "done") {
+      if (result == 1) {
         Navigator.pop(context);
       } else {
         _errorMsg = result.toString();
@@ -218,70 +233,112 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
 
 
-  //pickedimage takes wether null or the file ref
-  //if it's not null the imgedited is set to true
+
+  //first pickedimage is neither null or has a network value (depends on if the user has profil pic or not)
+  //if the image is picked successfully the picked image will have a file value and imageedited is true now
   Future<void> _pickImage() async {
     if (_isLoading) {
       return;
     }
     _isLoading = true;
-    setState(() {});
     _pickedImage = await Utilities.pickImage();
     if (_pickedImage != null) {
       _isImgEdited = true;
+    }else{
+      toastMsg("cant pick image");
     }
     _isLoading = false;
     setState(() {});
   }
 
 
-
-
-  //when clicking the choose_date we make the show_date_picker object and the initial date will be the now date if no date is selected
-  //if a new date is picked we update the ui with the new picked date
-  //the selected_date is of type date but we show it as a string
+  //we cant pick when it's loading, and if there is an error in picking we show it to user
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null && pickedDate != _selectedDate) {
-      setState(() {
-        _selectedDate = pickedDate;
-        _dateController.text = _selectedDate!
-            .toString()
-            .substring(0, 10); // Update text field value
-      });
+    if (_isLoading) {
+      return;
+    }
+    try {
+      //when clicking the choose_date we make the show_date_picker object and the initial date will be the now date if no date is selected
+      final DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate ?? DateTime.now(),
+        firstDate: DateTime(1900),
+        lastDate: DateTime(2100),
+      );
+      //if a new date is picked we update the ui with the new picked date
+      //the selected_date is of type date but we show it as a string
+      if (pickedDate != null && pickedDate != _selectedDate && mounted) {
+        setState(() {
+          _selectedDate = pickedDate;
+          _dateController.text = _selectedDate!
+              .toString()
+              .substring(0, 10); // Update text field value
+        });
+      }
+    } catch (e) {
+      print('cant pick date: ' + e.toString());
     }
   }
 
 
 
 
-  void setFields() {
-//to prevent the ui imperfection
-    _nameController.text = '_';
-    _cityController.text = '_';
-    _descriptionController.text = '_';
-    _dateController.text = '_';
 
-//we get the user , this run asynch
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .get()
-        .then((DocumentSnapshot documentSnapshot) {
+
+
+
+
+
+
+  void getUserLocation() async {
+    //if a previous update or getLocation are still running we leave
+    if (_isLoading) {
+      return;
+    }
+
+    //we make the loading ui
+    _isLoading = true;
+    locationMsg = "";
+
+    //we get the location msg which is either a denial, an error or the location
+    //we show the corresponding msg and leave
+    //if it's a location we set the location list and leave
+    List a = await UserService.getLocation();
+    if (a[0] == -1) {
+      _isLoading = false;
+      toastMsg("u have to permit location access");
+    } else if (a[0] == -2) {
+      _isLoading = false;
+      toastMsg("error while getting user location");
+    } else {
+      location = a;
+      _isLoading = false;
+      locationMsg = "lat: ${a[0]}, long: ${a[1]}";
+      toastMsg("location successfully updated");
+    }
+    setState(() {});
+  }
+
+
+
+
+  //this mthd is executed once at the beginning, and it's the only one accessing the statevar
+  //we get user and initiate the textfieldControllers and if role==1 we set ischef to true and set chef fields
+  //if all done very well we set statvar to 1 and rebuild, if any error we we set statevar to -1 and rebuild
+  Future<void> setFields() async {
+    try {
+      DocumentSnapshot? documentSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
       if (documentSnapshot.exists) {
-//after we get user we initiate the textfieldControllers and rebuild
         Map<String, dynamic> userData =
             documentSnapshot.data() as Map<String, dynamic>;
         _nameController.text = userData['name'] ?? '';
         _cityController.text = userData['city'] ?? '';
         _descriptionController.text = userData['description'] ?? '';
-        _selectedDate = userData['birthDay'].toDate();
+        _selectedDate = userData['birthDay']?.toDate() ?? '';
         _dateController.text = _selectedDate.toString().substring(0, 10);
         _pickedImage = userData['imageUrl'];
         previousImgUrl = userData['imageUrl'];
@@ -292,44 +349,31 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           locationMsg = "lat: ${location?[0]}, long: ${location?[1]}";
           _phoneController.text = userData['phone'] ?? '';
         }
+      } else {
+        stateVar = -1;
+        setState(() {});
+        return;
       }
+    } catch (e) {
+      print(e.toString());
+      stateVar = -1;
       setState(() {});
-    });
-  }
-
-
-
-
-  void getUserLocation() async {
-    //if a previous updtae or getLocation are still running we leave
-    if (_isLoading) {
       return;
     }
-
-    //we make the loading ui
-    _isLoading = true;
-    locationMsg = "";
+    stateVar = 1;
     setState(() {});
-
-    //we get the location msg which either a denial, an error or the location
-    //we show the corresponding msg and leave
-    //if it's a location we set the location list and leave
-    List a = await UserService.getLocation();
-    if (a[0] == -1) {
-      _isLoading = true;
-      locationMsg = "u have to permit location access";
-      setState(() {});
-      return;
-    } else if (a[0] == -2) {
-      _isLoading = false;
-      locationMsg = "error while getting user location";
-      setState(() {});
-      return;
-    } else {
-      location = a;
-      _isLoading = false;
-      locationMsg = "lat: ${a[0]}, long: ${a[1]}";
-      setState(() {});
-    }
   }
+
+
+
+
+
+  toastMsg(String msg){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg)));
+  }
+
+
+
+
 }

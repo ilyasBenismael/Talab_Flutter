@@ -1,4 +1,8 @@
+import 'package:ecommerce/screens/user/my_profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+import '../options/settings_screen.dart';
 
 class SearchTab extends StatefulWidget {
   @override
@@ -21,8 +25,7 @@ class _SearchTabState extends State<SearchTab>
       ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
+          const Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               decoration: InputDecoration(
@@ -31,7 +34,6 @@ class _SearchTabState extends State<SearchTab>
               ),
             ),
           ),
-          // ListView.builder displaying items in rows
           Expanded(
             child: ListView.builder(
               itemCount: items.length,

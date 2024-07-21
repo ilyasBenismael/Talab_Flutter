@@ -7,14 +7,17 @@ import 'package:geolocator/geolocator.dart';
 
 class UserService {
 
-
-
   // Sign in with Google
   static Future<int> signInWithGoogle() async {
     try {
+      //we get the googluser that is choosed
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      //we get the googleauth objct of this user that contains details for signing in
       final GoogleSignInAuthentication googleAuth =
           await googleUser!.authentication;
+
+      //we get the credentials to sign in to firebase from the googleauth objct
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -73,7 +76,7 @@ class UserService {
 
 
 
-  static Future<String> updateUser(Map<String, dynamic> userInfos,
+  static Future<int> updateUser(Map<String, dynamic> userInfos,
       bool isEdited, String? previousImgUrl) async {
     try {
       //we reformate the date to be stored in firestore
@@ -91,12 +94,12 @@ class UserService {
         String fileName = DateTime.now().millisecondsSinceEpoch.toString();
         Reference ref =
             FirebaseStorage.instance.ref().child('profils/$fileName');
-        //put the image in storage and get its url
+        //put the image in storage and get it s url
         await ref.putFile(userInfos['imageFile']);
         downloadURL = await ref.getDownloadURL();
       }
 
-      //store user data in Firestore.
+      //store userdata in Firestore.
       await FirebaseFirestore.instance
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser!.uid)
@@ -109,9 +112,10 @@ class UserService {
         'location': userInfos['location'],
         'phone': userInfos['phone'],
       });
-      return "done";
+      return 1;
     } catch (e) {
-      return "Registration failed: $e";
+      print(e.toString());
+      return -1;
     }
   }
 
@@ -120,6 +124,8 @@ class UserService {
 
 
   Future<int> registerUser(Map<String, dynamic> userInfos) async {
+
+    //check emptiness
     if (userInfos['name'].isEmpty ||
         userInfos['city'].isEmpty ||
         userInfos['birthDay'] == null) {
@@ -127,6 +133,7 @@ class UserService {
       return -1;
     }
 
+    //turn to firestore date type
     userInfos['birthDay'] = Timestamp.fromDate(userInfos['birthDay']);
 
     try {
@@ -139,7 +146,8 @@ class UserService {
         await ref.putFile(userInfos['imageFile']);
         downloadURL = await ref.getDownloadURL();
       }
-      //store user data in Firestore.
+
+      //store user data in Firestore. as client role = 0
       await FirebaseFirestore.instance
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser!.uid)
@@ -158,6 +166,7 @@ class UserService {
       print("registering done");
       return 1;
     } catch (e) {
+      //if any error return -2
       print(e.toString());
       return -2;
     }
@@ -211,12 +220,15 @@ class UserService {
         if (documentSnapshot.exists) {
           return documentSnapshot.get('role');
         } else {
+          print("no user found");
           return null;
         }
       } else {
+        print("userid is null");
         return null;
       }
     } catch (e) {
+      print(e.toString());
       return null;
     }
   }
@@ -230,15 +242,16 @@ class UserService {
 
 
 
-  Future<String?> makeUserChef(Map<String, dynamic> userInfos) async {
+  Future<int> makeUserChef(Map<String, dynamic> userInfos) async {
     try {
       DocumentReference userRef = FirebaseFirestore.instance
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser?.uid);
       await userRef.update(userInfos);
-      return "done";
+      return 1;
     } catch (e) {
-      return "Error updating user fields: $e";
+      print(e.toString());
+      return -1;
     }
   }
 
@@ -248,20 +261,23 @@ class UserService {
 
 
   static Future<List> getLocation() async {
+    //we request permission twice and if it's denied we return -1 else we just continue and get location
     LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
       return [-1];
-    } else if (permission == LocationPermission.deniedForever) {
-      return [-1];
-    } else {
+    } }
+      //we get current position list and if any error we return -2
       try {
         Position position = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high);
         return [position.latitude, position.longitude];
       } catch (e) {
-        return [-3];
+        print(e.toString());
+        return [-2];
       }
-    }
+
   }
 
 

@@ -1,6 +1,6 @@
 import 'package:ecommerce/services/postService.dart';
 import 'package:flutter/material.dart';
-import 'package:ecommerce/screens/post/postScreen.dart';
+import 'package:ecommerce/screens/post/post_screen.dart';
 import 'package:ecommerce/screens/widgets/postWidget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -64,23 +64,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
 
 
+
   Future<int> getUserFavs() async {
-    try {
       favPosts = await PostService.getFavoritePosts(
           FirebaseAuth.instance.currentUser!.uid);
       if (favPosts == null) {
         return -1;
       }
       if (favPosts!.isEmpty) {
-        print('ccc');
         return -2;
       }
-      print('ddd');
       return 1;
-    } catch (e) {
-      print('fff');
-      return -1;
-    }
+
   }
 
 
