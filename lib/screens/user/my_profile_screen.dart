@@ -21,6 +21,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF282828),
         title: const Text('My Profile'),
       ),
       body: FutureBuilder<DocumentSnapshot>(
@@ -29,7 +30,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasData) {
+          } else if (snapshot.hasData && snapshot.data!.exists) {
             Map<String, dynamic>? userData =
                 snapshot.data!.data() as Map<String, dynamic>?;
             return Padding(

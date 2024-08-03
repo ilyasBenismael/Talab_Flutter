@@ -51,6 +51,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF282828),
         title: Text('Add Post'),
       ),
       body: SingleChildScrollView(
@@ -199,6 +200,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
 
   void toggleCategory(String categoryId) {
+    if(_isLoading){
+      return;
+    }
       if (selectedCategories.contains(categoryId)) {
         selectedCategories.remove(categoryId);
       } else {
@@ -256,7 +260,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       return;
     }
 
-    //()- we check if role == 0 then we see if fields are assigned then we updatethe user first
+    //()- we check if role == 0 then we see if fields are assigned then we update the user first
     if (role == 0) {
       if (_phoneController.text.isEmpty || userLocation == null) {
         _isLoading = false;
@@ -302,6 +306,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
 
 
+
+
   Future<void> _pickImage() async {
     if (_isLoading) {
       return;
@@ -316,18 +322,30 @@ class _AddPostScreenState extends State<AddPostScreen> {
     setState(() {});
   }
 
+
+
+
   void setCategories() {
-    FirebaseFirestore.instance
-        .collection('categories')
-        .get()
-        .then((querySnapshot) {
-      if (!mounted) {
-        return;
-      }
-      categories = querySnapshot.docs;
-      setState(() {});
-    });
+    try {
+      FirebaseFirestore.instance
+          .collection('categories')
+          .get()
+          .then((querySnapshot) {
+        if (!mounted) {
+          return;
+        }
+        categories = querySnapshot.docs;
+        setState(() {});
+      });
+    }catch(e){
+      categories= [];
+    }
   }
+
+
+
+
+
 
   //if role != 1 or error it will remain 0
   void setUserRole() async {
@@ -349,6 +367,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg)));
   }
+
 
 
   void getUserLocation() async {

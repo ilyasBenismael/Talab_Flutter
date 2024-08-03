@@ -6,7 +6,8 @@ import 'package:ecommerce/screens/widgets/postWidget.dart';
 
 class CategoryScreen extends StatefulWidget {
   final String categoryId;
-  const CategoryScreen({Key? key, required this.categoryId}) : super(key: key);
+  final String categoryName;
+  const CategoryScreen({Key? key, required this.categoryId, required this.categoryName}) : super(key: key);
 
   @override
   _CategoryScreenState createState() => _CategoryScreenState();
@@ -28,7 +29,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Category: ${widget.categoryId}'),
+        backgroundColor: const Color(0xFF282828),
+        title: Text(widget.categoryName),
       ),
       body: FutureBuilder<QuerySnapshot>(
         future: _postsFuture,
@@ -38,7 +40,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No posts available in this category.'));
+            return const Center(child: Text('No posts available in this category.'));
           } else {
             final posts = snapshot.data!.docs;
             return GridView.builder(

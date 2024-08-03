@@ -12,6 +12,7 @@ class TermsScreenState extends State<TermsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF282828),
         title: const Text('Terms and Conditions'),
       ),
       body: const SingleChildScrollView(

@@ -4,6 +4,7 @@ import 'package:ecommerce/services/postService.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class OtherProfileScreen extends StatefulWidget {
   final String userId;
@@ -28,6 +29,7 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: const Color(0xFF282828),
           title: Text('user profile'),
         ),
         body: FutureBuilder(
@@ -39,7 +41,7 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
               (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasData) {
+            } else if (snapshot.hasData && snapshot.data!.exists) {
               Map<String, dynamic>? userData =
                   snapshot.data!.data() as Map<String, dynamic>?;
               return Padding(
@@ -67,11 +69,15 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
                                 ),
                                 ClipOval(
                                   child: userData?['imageUrl'] != null
-                                      ? Image.network(
-                                          userData?['imageUrl'] ?? '',
+                                      ? CachedNetworkImage(
+                                          imageUrl: userData?['imageUrl'],
+                                          placeholder: (context, url) =>
+                                              Container(),
+                                          errorWidget: (context, url, error) =>
+                                              Container(),
+                                          fit: BoxFit.cover,
                                           width: 80,
                                           height: 80,
-                                          fit: BoxFit.cover,
                                         )
                                       : Container(),
                                 ),
@@ -283,8 +289,6 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
     );
   }
 
-
-
   void openMaps(List? location) async {
     try {
       if (location != null) {
@@ -302,7 +306,4 @@ class _OtherProfileScreenState extends State<OtherProfileScreen> {
       print(e.toString());
     }
   }
-
-
-
 }

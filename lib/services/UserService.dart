@@ -124,7 +124,6 @@ class UserService {
 
 
   Future<int> registerUser(Map<String, dynamic> userInfos) async {
-
     //check emptiness
     if (userInfos['name'].isEmpty ||
         userInfos['city'].isEmpty ||
@@ -258,8 +257,6 @@ class UserService {
 
 
 
-
-
   static Future<List> getLocation() async {
     //we request permission twice and if it's denied we return -1 else we just continue and get location
     LocationPermission permission = await Geolocator.requestPermission();
@@ -277,7 +274,6 @@ class UserService {
         print(e.toString());
         return [-2];
       }
-
   }
 
 

@@ -1,9 +1,12 @@
+import 'package:ecommerce/screens/post/edit_post_screen.dart';
 import 'package:ecommerce/services/UserService.dart';
 import 'package:ecommerce/services/postService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../user/other_profile_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PostScreen extends StatefulWidget {
   final String postId;
@@ -13,8 +16,6 @@ class PostScreen extends StatefulWidget {
   @override
   _PostScreenState createState() => _PostScreenState();
 }
-
-
 
 class _PostScreenState extends State<PostScreen> {
   final CollectionReference postsCollection =
@@ -27,10 +28,10 @@ class _PostScreenState extends State<PostScreen> {
   bool isHeartClickable = true;
   int? userAuthState;
   String? currentuid;
-  ValueNotifier<int> favState = ValueNotifier<int>(0);
+  bool _isLoading = false; //only delete method has hand on this var
+  ValueNotifier<int> favState =
+      ValueNotifier<int>(0); //favstat is int initialized with 0
 
-  // int pageState = 0;
-  // 0 ; loading, 1 error occured, 3 all alright
 
 
   @override
@@ -39,12 +40,11 @@ class _PostScreenState extends State<PostScreen> {
     getPostAndUser(widget.postId);
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF282828),
         title: Text('Post Details'),
       ),
       body: FutureBuilder(
@@ -52,11 +52,7 @@ class _PostScreenState extends State<PostScreen> {
         builder: (context, postSnapshot) {
           if (postSnapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
-          } else if (postSnapshot.hasError) {
-            return Center(child: Text('Error: ${postSnapshot.error}'));
-          } else if (postSnapshot.data != 1) {
-            return Center(child: Text('error occured'));
-          } else {
+          } else if (postSnapshot.data == 1) {
             return SingleChildScrollView(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,13 +62,18 @@ class _PostScreenState extends State<PostScreen> {
                       child: AspectRatio(
                         aspectRatio: 1.0,
                         child: ClipRRect(
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
                           child: Container(
-                            width: double.infinity,
-                            color: Colors.grey,
-                            child: Image.network(postData!['imageUrl'],
-                                fit: BoxFit.cover),
-                          ),
+                              width: double.infinity,
+                              color: Colors.grey,
+                              child: CachedNetworkImage(
+                                imageUrl: postData!['imageUrl'] ?? '',
+                                placeholder: (context, url) => Container(),
+                                errorWidget: (context, url, error) =>
+                                    Container(),
+                                fit: BoxFit.cover,
+                              )),
                         ),
                       ),
                     ),
@@ -82,8 +83,8 @@ class _PostScreenState extends State<PostScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            postData!['price'],
-                            style: TextStyle(
+                            postData!['price'] ?? "",
+                            style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           GestureDetector(
@@ -104,22 +105,22 @@ class _PostScreenState extends State<PostScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 20,
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(11.0, 4, 8, 3),
                       child: Text(
-                        postData!['title'],
-                        style: TextStyle(
+                        postData!['title'] ?? "",
+                        style: const TextStyle(
                             fontSize: 24.0, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(11.0, 8, 8, 3),
                       child: Text(
-                        postData!['description'],
-                        style: TextStyle(fontSize: 16.0),
+                        postData!['description'] ?? "",
+                        style: const TextStyle(fontSize: 16.0),
                       ),
                     ),
                     SizedBox(
@@ -128,51 +129,101 @@ class _PostScreenState extends State<PostScreen> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: GestureDetector(
-                        onTap: () {
-                          goToUser(context, postData!['userId']);
-                        },
-                        child: Row(children: [
-                          Stack(
-                            children: [
-                              ClipOval(
-                                child: Image.asset(
-                                  'images/profileX.jpeg',
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              ClipOval(
-                                child: userData?['imageUrl'] != null
-                                    ? Image.network(
-                                  userData?['imageUrl'] ?? '',
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                )
-                                    : Container(),
-                              ),
-                              // Use SizedBox if no image is picked
-                            ],
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            userData!['name'],
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          onTap: () {
+                            goToUser(context, postData!['userId'] ?? "");
+                          },
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
                             ),
-                          ),
-                        ]),
-                      ),
+                            child: Container(
+                              padding: EdgeInsets.all(8.0),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                // Border color
+                              ),
+                              child: Row(
+                                children: [
+                                  Stack(
+                                    children: [
+                                      ClipOval(
+                                        child: Image.asset(
+                                          'images/profileX.jpeg',
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      ClipOval(
+                                        child: userData!['imageUrl'] != null
+                                            ? CachedNetworkImage(
+                                                imageUrl:
+                                                    userData!['imageUrl'] ?? '',
+                                                placeholder: (context, url) =>
+                                                    Container(),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        Container(),
+                                                width: 50,
+                                                height: 50,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    userData!['name'] ?? "",
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )),
                     ),
+                    const SizedBox(width: 16),
+                    if (postData!['userId'] == currentuid && currentuid != null)
+                      Row(
+
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 30, width : 10),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => goToEditPost(widget.postId),
+                            tooltip: 'Edit',
+                          ),
+                          SizedBox(height: 30, width : 10),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () => _showDeleteConfirmationDialog(context),
+                            tooltip: 'Delete',
+                          ),
+                        ],
+                      )
                   ]),
             );
+          } else {
+            return const Center(child: const Text('Post not Available'));
           }
         },
       ),
     );
   }
+
+
+
+
+
+
+
 
 
 
@@ -197,24 +248,39 @@ class _PostScreenState extends State<PostScreen> {
 
 
 
+
+
+
+
+
+
+
+
+
+
   //we get the data of the post and then we get the data of the considered user
-  //if they are null/ an error occured we don't return 1
+  //if they are null an error occured we don't return 1
   Future<int> getPostAndUser(String postId) async {
     try {
       //currentuid will be null if no user is auth
       currentuid = FirebaseAuth.instance.currentUser?.uid;
-      userAuthState = await UserService.checkUserAuth();
+      userAuthState = await UserService
+          .checkUserAuth(); //checkUserAuth() returns 2 if the user is authenticated
       postData = await PostService.getPostById(postId);
       userData = await UserService.getUserById(postData!["userId"]);
+
+      //if the user is auth we get his favposts
       if (userAuthState == 2) {
         favPosts = await PostService.getFavoritePostsIds(currentuid!);
       }
+
+      //if any of these values is null means there was an error
       if (postData == null || userData == null || favPosts == null) {
         return 0;
       }
       return 1;
     } catch (e) {
-      print("catch error");
+      print(e);
       return 0;
     }
   }
@@ -225,35 +291,182 @@ class _PostScreenState extends State<PostScreen> {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //we run the favclick method asynch to not block the process
   void handleFav() async {
-    //if user is not auth we return
-    if (userAuthState != 2) {
-      print('u need to auth');
+    if (_isLoading) {
       return;
     }
-    //if heart is still handling from a previous click, we return
-    if (isHeartClickable) {
-      isHeartClickable = false;
-      DocumentReference userRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid);
-      //if favposts contains postId we remove, else we add
-      if (favPosts!.contains(widget.postId)) {
-        favPosts!.remove(widget.postId);
-        favState.value = 11;
-        await userRef.update({'favPosts': favPosts});
-        //if the postid is removed from favposts and not from firestore this won't cause a prob,
-        //in the next addtofav it will be working again
-      } else {
-        favPosts!.add(widget.postId);
-        favState.value = 10;
-        await userRef.update({'favPosts': favPosts});
+    try {
+      //if user is not auth we return
+      if (userAuthState != 2) {
+        toastMsg('u need to login');
+        return;
       }
-     // setState(() {});
+      //if heart is still handling from a previous click, we return
+      if (isHeartClickable) {
+        isHeartClickable = false;
+        DocumentReference userRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid);
+
+        //if favposts contains postId we remove, else we add
+        if (favPosts!.contains(widget.postId)) {
+          favPosts!.remove(widget.postId);
+          favState.value =
+              11; //when changing the value of favstate the heart will be rebuilt
+          await userRef.update({'favPosts': favPosts});
+          //if the postid is removed from favposts and not from firestore this won't cause a prob,
+          //cause in next tap we will add it again to favposts and we will update in firestore with the same value as before but no prob
+        } else {
+          favPosts!.add(widget.postId);
+          favState.value = 10;
+          await userRef.update({'favPosts': favPosts});
+        }
+        isHeartClickable = true;
+      }
+      return;
+    } catch (e) {
+      //if any error we will leave making sure that the heart is clickable again
       isHeartClickable = true;
+      print(e);
+      return;
     }
-    return;
   }
+
+
+
+
+
+
+
+
+
+
+
+  toastMsg(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+
+
+
+
+
+
+  goToEditPost(postId) {
+    if (postData!['userId'] == currentuid && currentuid != null){
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => EditPostScreen(postId: postId)),
+      );
+    }
+  }
+
+
+
+
+
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    if(!mounted){return;}
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text('Are you sure you want to delete this post?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                deletePost(widget.postId); // Call delete function
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  Future<void> deletePost(String postId) async {
+
+    if (_isLoading || postData!['userId'] != currentuid) {
+      return;
+    }
+
+    //when deleting, can't add to favorite or edit/delete the post
+    _isLoading = true;
+    try {
+      //we check if image exists then delete it before deleting the post
+      if (postData!['imageUrl'] != null) {
+        await FirebaseStorage.instance
+            .refFromURL(postData!['imageUrl'])
+            .delete();
+      }
+      await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+      if(mounted){Navigator.of(context).pop();}
+      print('Post deleted successfully.');
+    } catch (e) {
+      print('Failed to delete post: $e');
+    }
+    _isLoading = false;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

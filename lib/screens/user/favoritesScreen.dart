@@ -16,18 +16,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF282828),
         title: Text('Your favorites'),
       ),
       body: FutureBuilder(
         future: getUserFavs(),
         builder: (BuildContext context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
             if (snapshot.data == -2) {
-              return Center(child: Text('You have no favorite posts'));
+              return const Center(child: Text('You have no favorite posts'));
             }
             else if (snapshot.data == 1){
               return GridView.builder(
