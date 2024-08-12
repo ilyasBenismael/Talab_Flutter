@@ -22,6 +22,7 @@ class PostService {
         'keywords': postInfos['keywords'],
         'imageUrl': downloadURL,
         'userId': FirebaseAuth.instance.currentUser!.uid.toString(),
+        'comments': 0,
         'timeStamp': FieldValue.serverTimestamp()
       });
       return 1;
@@ -34,8 +35,12 @@ class PostService {
 
 
 
+
+
   static Future<int> updatePost(Map<String, dynamic> postInfos, bool isImgEdited, String postId, String? previousImgUrl) async {
     try {
+
+      //if anything is empty we wont accept it
       if (postInfos['title'].isEmpty ||
           postInfos['price'].isEmpty ||
           postInfos['description'].isEmpty ||
@@ -45,6 +50,7 @@ class PostService {
         return -1;
       }
 
+      //if img is edited we put the new imgfile in firebase and get its url and delete the old pic
       if(isImgEdited) {
       //store the image file in firebasestorage and get its url
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
@@ -58,7 +64,7 @@ class PostService {
       }
 
 
-      //store user data in Firestore.
+      //after this we update the post (saving old timestamp)
       await FirebaseFirestore.instance.collection('posts').doc(postId).update({
         'title': postInfos['title'],
         'price': postInfos['price'],
@@ -67,7 +73,6 @@ class PostService {
         'keywords': postInfos['keywords'],
         'imageUrl': postInfos['imageFile'],
         'userId': FirebaseAuth.instance.currentUser!.uid.toString(),
-        'timeStamp': FieldValue.serverTimestamp()
       });
       return 1;
     } catch (e) {
@@ -77,6 +82,32 @@ class PostService {
   }
 
 
+  Future<int> deletePostAndComments(String postId, String? imageUrl) async {
+    try {
+      // Delete image from Firebase Storage if it exists
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        await FirebaseStorage.instance.refFromURL(imageUrl).delete();
+      }
+
+      // Delete post from Firestore
+      await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+
+      // Get all comments with the specified postId and delete them
+      QuerySnapshot commentsSnapshot = await FirebaseFirestore.instance
+          .collection('comments')
+          .where('postId', isEqualTo: postId)
+          .get();
+
+      for (QueryDocumentSnapshot doc in commentsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      return 1; // Success
+    } catch (e) {
+      print("Failed to delete post and comments: $e");
+      return -1; // Failure
+    }
+  }
 
 
 
@@ -106,7 +137,7 @@ class PostService {
       if (postSnapshot.exists) {
         Map<String, dynamic>? postData = postSnapshot.data();
         return postData;
-      }else {
+      } else {
         return null;
       }
     } catch (error) {

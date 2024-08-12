@@ -1,6 +1,6 @@
 import 'package:ecommerce/screens/tabs/home_tab.dart';
 import 'package:ecommerce/screens/tabs/profile_tab.dart';
-import 'package:ecommerce/screens/tabs/SearchTab.dart';
+import 'package:ecommerce/screens/tabs/search_tab.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:ecommerce/screens/post/post_screen.dart';
-import 'package:ecommerce/screens/widgets/postWidget.dart';
+import 'package:ecommerce/screens/post/post_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';

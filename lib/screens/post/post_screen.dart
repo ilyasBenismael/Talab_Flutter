@@ -1,8 +1,8 @@
+import 'package:ecommerce/screens/comments/comments_screen.dart';
 import 'package:ecommerce/screens/post/edit_post_screen.dart';
 import 'package:ecommerce/services/UserService.dart';
 import 'package:ecommerce/services/postService.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../user/other_profile_screen.dart';
@@ -32,12 +32,9 @@ class _PostScreenState extends State<PostScreen> {
   ValueNotifier<int> favState =
       ValueNotifier<int>(0); //favstat is int initialized with 0
 
-
-
   @override
   void initState() {
     super.initState();
-    getPostAndUser(widget.postId);
   }
 
   @override
@@ -189,21 +186,36 @@ class _PostScreenState extends State<PostScreen> {
                           )),
                     ),
                     const SizedBox(width: 16),
+                    InkWell(
+                      onTap: () => goToComments(context, widget.postId),
+                      child: Padding(
+                        padding: const EdgeInsets.all(13.0),
+                        child: Text(
+                          '${postData!['comments'] ?? ''} comments',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 50),
                     if (postData!['userId'] == currentuid && currentuid != null)
                       Row(
-
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          SizedBox(height: 30, width : 10),
+                          SizedBox(height: 30, width: 10),
                           IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () => goToEditPost(widget.postId),
                             tooltip: 'Edit',
                           ),
-                          SizedBox(height: 30, width : 10),
+                          const SizedBox(height: 30, width: 10),
                           IconButton(
                             icon: const Icon(Icons.delete),
-                            onPressed: () => _showDeleteConfirmationDialog(context),
+                            onPressed: () =>
+                                _showDeleteConfirmationDialog(context),
                             tooltip: 'Delete',
                           ),
                         ],
@@ -211,29 +223,17 @@ class _PostScreenState extends State<PostScreen> {
                   ]),
             );
           } else {
-            return const Center(child: const Text('Post not Available'));
+            return const Center(child: Text('Post not Available'));
           }
         },
       ),
     );
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
   void goToUser(BuildContext context, String userId) {
     //if the currentuser is the postowner he can't visit his profil this way,
     //if he is not auth then currentuid==null, so he can visit it
-    if (userId != currentuid) {
+    if (userId != currentuid && !_isLoading) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -242,21 +242,19 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  void goToComments(BuildContext context, postId) {
+    if(_isLoading){
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CommentsScreen(postId: postId)),
+    );
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //we get the data of the post and then we get the data of the considered user
   //if they are null an error occured we don't return 1
@@ -284,26 +282,6 @@ class _PostScreenState extends State<PostScreen> {
       return 0;
     }
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   //we run the favclick method asynch to not block the process
   void handleFav() async {
@@ -347,62 +325,43 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
   toastMsg(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-
-
-
-
-
-
+  //can't edit post if u not the post owner
   goToEditPost(postId) {
-    if (postData!['userId'] == currentuid && currentuid != null){
+    if (postData!['userId'] == currentuid && currentuid != null && !_isLoading) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => EditPostScreen(postId: postId)),
+        MaterialPageRoute(builder: (context) => EditPostScreen(postId: postId)),
       );
     }
   }
 
-
-
-
-
-
   void _showDeleteConfirmationDialog(BuildContext context) {
-    if(!mounted){return;}
+    if (!mounted) {
+      return;
+    }
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete this post?'),
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this post?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
                 deletePost(widget.postId); // Call delete function
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: Text('Delete'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -416,59 +375,29 @@ class _PostScreenState extends State<PostScreen> {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   Future<void> deletePost(String postId) async {
 
+    //if still deleting from old click and the user auth isn't post owner we go back
     if (_isLoading || postData!['userId'] != currentuid) {
       return;
     }
 
     //when deleting, can't add to favorite or edit/delete the post
     _isLoading = true;
-    try {
-      //we check if image exists then delete it before deleting the post
-      if (postData!['imageUrl'] != null) {
-        await FirebaseStorage.instance
-            .refFromURL(postData!['imageUrl'])
-            .delete();
-      }
-      await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
-      if(mounted){Navigator.of(context).pop();}
-      print('Post deleted successfully.');
-    } catch (e) {
-      print('Failed to delete post: $e');
+
+    int a = await PostService()
+        .deletePostAndComments(postId, postData!['imageUrl']);
+    if (a == 1) {
+      print('deleted succesfully');
+    } else {
+      print('error occured');
+    }
+    //we return and show either done or  not done msg
+    if (mounted) {
+      Navigator.of(context).pop();
     }
     _isLoading = false;
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

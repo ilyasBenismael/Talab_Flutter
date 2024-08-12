@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ecommerce/screens/post/post_screen.dart';
-import 'package:ecommerce/screens/widgets/postWidget.dart';
+import 'package:ecommerce/screens/post/post_widget.dart';
 
 
 class CategoryScreen extends StatefulWidget {

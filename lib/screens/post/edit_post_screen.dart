@@ -14,6 +14,8 @@ class EditPostScreen extends StatefulWidget {
 }
 
 class _EditPostScreenState extends State<EditPostScreen> {
+
+
   ///////////////////////////////////////////////////////////////////////////////
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
@@ -34,7 +36,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
   void initState() {
     super.initState();
     setCategories();
-    print('eeeee');
     stateVar = getPostData(widget.postId);
   }
 
@@ -54,7 +55,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF282828),
-        title: const Text('Save Post'),
+        title: const Text('Edit Post'),
       ),
       body: FutureBuilder<int>(
           future: stateVar,
@@ -194,7 +195,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
 ///////////////////////////////////////////////// GET POST DATA ///////////////////////////////////////////////////////////////
 
-  //this is the future int our futurebuilder use, before the methode complets aykun loading,
+  //this is the future int our futurebuilder use, before the method completes aykun loading,
   //if no error o has data o data ==1 means all is good o postdata o selectedcategs are filled succesfully
   //else we will show an error
   Future<int> getPostData(String postId) async {
@@ -230,9 +231,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
           .collection('categories')
           .get()
           .then((querySnapshot) {
-        if (!mounted) {
-          return;
-        }
+        if (!mounted) {return;}
         categories = querySnapshot.docs;
         setState(() {});
       });

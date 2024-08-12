@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ecommerce/screens/widgets/postWidget.dart';
+import 'package:ecommerce/screens/post/post_widget.dart';
 import 'package:ecommerce/screens/post/post_screen.dart';
 import '../post/category_screen.dart';
 
