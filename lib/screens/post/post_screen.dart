@@ -8,6 +8,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../user/other_profile_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+
+
 class PostScreen extends StatefulWidget {
   final String postId;
 
@@ -120,7 +122,7 @@ class _PostScreenState extends State<PostScreen> {
                         style: const TextStyle(fontSize: 16.0),
                       ),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 40,
                     ),
                     Padding(
@@ -137,10 +139,9 @@ class _PostScreenState extends State<PostScreen> {
                               topRight: Radius.circular(16),
                             ),
                             child: Container(
-                              padding: EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(8.0),
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
-                                // Border color
                               ),
                               child: Row(
                                 children: [

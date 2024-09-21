@@ -20,7 +20,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _keywordsController = TextEditingController();
   bool _isLoading = false;
   bool _isImgEdited = false;
   String? previousImgUrl;
@@ -45,7 +44,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
     _descriptionController.dispose();
     _titleController.dispose();
     _priceController.dispose();
-    _keywordsController.dispose();
     super.dispose();
   }
 
@@ -126,16 +124,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
                         decoration:
                             const InputDecoration(labelText: 'Description'),
                       ),
-                      SizedBox(height: 16),
-                      TextFormField(
-                        controller: _keywordsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Keywords',
-                          hintText: 'put ur keywords separated with space',
-                        ),
-                        maxLength: 50, // Set the maximum length
-                        maxLines: 1, // Restrict to a single line
-                      ),
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
@@ -214,7 +202,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
       _titleController.text = _postData!['title'] ?? '';
       _priceController.text = _postData!['price'] ?? '';
       _descriptionController.text = _postData!['description'] ?? '';
-      _keywordsController.text = _postData!['keywords'] ?? '';
 
       return 1;
     } catch (e) {
@@ -285,14 +272,12 @@ class _EditPostScreenState extends State<EditPostScreen> {
     final title = _titleController.text.trim();
     final price = _priceController.text.trim();
     final description = _descriptionController.text.trim();
-    final keywords = _keywordsController.text.trim();
     Map<String, dynamic> postInfos = {
       'title': title,
       'price': price,
       'description': description,
       'imageFile': _pickedImage,
       'categories': selectedCategories,
-      'keywords': keywords,
     };
 
     //after all this we add the post to the database

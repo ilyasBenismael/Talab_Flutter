@@ -1,3 +1,4 @@
+import 'package:ecommerce/services/postService.dart';
 import 'package:flutter/material.dart';
 import 'package:ecommerce/screens/post/post_screen.dart';
 import 'package:ecommerce/screens/post/post_widget.dart';
@@ -12,8 +13,16 @@ class SearchTab extends StatefulWidget {
 
 class SearchTabState extends State<SearchTab>
     with AutomaticKeepAliveClientMixin {
-  final TextEditingController _searchController = TextEditingController();
-  Future<List<DocumentSnapshot>?>? _futurePosts;
+  TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> selectedTags = [];
+  List<Map<String, dynamic>> allTags = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    setAllTags();
+  }
 
   @override
   bool get wantKeepAlive => true;
@@ -23,99 +32,150 @@ class SearchTabState extends State<SearchTab>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF282828),
-        title: const Text('Search Screen'),
+        title: const Text('Search Page'),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
+      body: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Search Bar
+            TextField(
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
                 hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
               ),
-              onChanged: (text) => updateSearch(text),
+              style: const TextStyle(fontSize: 14),
             ),
-          ),
-          if (_futurePosts == null)
-            Expanded(
-              child: FutureBuilder<List<DocumentSnapshot>?>(
-                future: _futurePosts,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError || snapshot.data == null) {
-                    return Container();
-                  } else if (snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No results found'));
-                  } else {
-                    final posts = snapshot.data!;
-                    return GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                      ),
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) {
-                        final post = posts[index].data() as Map<String, dynamic>;
-                        return GestureDetector(
-                          onTap: () {
-                            goToPost(context, posts[index].id);
-                          },
-                          child: PostWidget(postInfos: post),
+            const SizedBox(height: 2), // Spacing
+            const Divider(thickness: 1),
+            const SizedBox(height: 1), // Spacing
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'Selected:',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(width: 3), // Spacing
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: selectedTags.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        var tag = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 3.0),
+                          child: Chip(
+                            label: Text(
+                             tag['name'] ?? "",
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            deleteIcon: const Icon(
+                              Icons.close,
+                              size: 11,
+                            ),
+                            onDeleted: () {
+                              removeTag(index);
+                            },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                          ),
                         );
-                      },
-                    );
-                  }
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 0), // Spacing
+            const Divider(thickness: 1),
+            SizedBox(
+              height: 120, // Adjust as needed
+              child: GridView.builder(
+                gridDelegate:  const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 100.0, // Max width for each item
+                  mainAxisSpacing: 2.0,
+                  crossAxisSpacing: 2.0,
+                  childAspectRatio: 1.5
+                ),
+                itemCount: allTags.length,
+                itemBuilder: (context, index) {
+                  return _buildTagItem(allTags[index]);
                 },
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  //////////////////////////////////////////////// UPDATE SEARCH /////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////// END OF BUILD /////////////////////////////////////////////////////////
 
-  void updateSearch(String text) {
-    text = text.trim();
-    if (text.length > 2) {
-      _futurePosts = getPostsFromSearch(text);
-    } else {
-      _futurePosts = null;
-    }
-    setState(() {});
+
+  Widget _buildTagItem(Map<String, dynamic> tagData) {
+    return GestureDetector(
+      onTap: () {
+        addTag(tagData);
+      },
+      child: Chip(
+        label: Text(
+          '#${tagData['name'] ?? ""} ',
+          style: const TextStyle(fontSize: 11),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        backgroundColor: Colors.blueAccent.withOpacity(0.2),
+        // Optionally set the selected state
+      ),
+    );
   }
 
-  //////////////////////////////////////////////////// GET POSTS /////////////////////////////////////////////////////////
 
-  Future<List<DocumentSnapshot>?> getPostsFromSearch(String query) async {
-    try {
-      List<String> keywords =
-          query.split(' ').where((keyword) => keyword.isNotEmpty).toList();
+/////////////////////////////////////////////////// END OF WIDGET /////////////////////////////////////////////////////////
 
-      Query queryRef = FirebaseFirestore.instance.collection('posts');
 
-      // Create a query with array-contains for each keyword
-      for (String keyword in keywords) {
-        queryRef = queryRef.where('keywords', arrayContains: keyword);
-      }
 
-      QuerySnapshot querySnapshot = await queryRef.get();
-      return querySnapshot.docs;
-    } catch (e) {
-      return null;
+
+
+
+
+
+/////////////////////////////////////////////// SET TAGS //////////////////////////////////////////////////////////////
+
+  void setAllTags() async {
+    if (_isLoading) {
+      return;
+    }
+    _isLoading = true;
+    allTags = await PostService.getAllTags();
+
+    if (allTags == []) {
+      print("error fetching tags");
+    }
+    _isLoading = false;
+
+    if(mounted){
+      setState(() {});
     }
   }
+
+
+
+
+
 
   /////////////////////////////////////////////// GO TO POST ////////////////////////////////////////////////////////////////
 
-  void goToPost(BuildContext context, String id) async {
+  void goToPost(BuildContext context, String id) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PostScreen(postId: id)),
@@ -124,13 +184,34 @@ class SearchTabState extends State<SearchTab>
 
 
 
+  /////////////////////////////////////////////// SELECT TAG //////////////////////////////////////////////////////////////
+
+
+  void addTag(tagData) {
+    selectedTags.add(tagData);
+    setState(() {});
+  }
+
+  void removeTag(int index) {
+    selectedTags.removeAt(index);
+    setState(() {});
+  }
+
+
 }
 
 
 
-//ay post tla7 knrevisiw tags o kitktbo mzn o kit7ydo wla ytzado chi whdin
 
 
 
-//categories : more general
-//tags : details
+
+//we get tags(u get all of them and put them in a list of maps) and show their name as circle texts in 3 per column
+//in a horizontal list
+
+//on select kitl3o li fihum and u can select many (if none is selected makitl3 walo)
+//selected tags always kidaru fmo9dima
+
+//ontextchanged fsearch bar : kanchufu akhir string mn b3d fasila or ila kan flbdya o ykun fog 2 chars,
+//we find tags containing that string o ndiruhum fmo9dima
+//

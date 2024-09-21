@@ -14,7 +14,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _keywordsController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
   String locationMsg = "";
@@ -41,7 +40,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
     _descriptionController.dispose();
     _titleController.dispose();
     _priceController.dispose();
-    _keywordsController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -103,16 +101,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
               TextField(
                 controller: _descriptionController,
                 decoration: InputDecoration(labelText: 'Description'),
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _keywordsController,
-                decoration: InputDecoration(
-                  labelText: 'Keywords',
-                  hintText: 'put ur keywords separated with space',
-                ),
-                maxLength: 50, // Set the maximum length
-                maxLines: 1, // Restrict to a single line
               ),
               SizedBox(height: 16),
               Container(
@@ -238,21 +226,18 @@ class _AddPostScreenState extends State<AddPostScreen> {
     final title = _titleController.text.trim();
     final price = _priceController.text.trim();
     final description = _descriptionController.text.trim();
-    final keywords = _keywordsController.text.trim();
     Map<String, dynamic> postInfos = {
       'title': title,
       'price': price,
       'description': description,
       'imageFile': _pickedImage,
       'categories': selectedCategories,
-      'keywords': keywords,
     };
 
     if (postInfos['title'].isEmpty ||
         postInfos['price'].isEmpty ||
         postInfos['description'].isEmpty ||
         postInfos['categories'].isEmpty ||
-        postInfos['keywords'].isEmpty ||
         postInfos['imageFile'] == null) {
       _isLoading = false;
       toastMsg("Please fill in all required fields and select an image");

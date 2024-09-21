@@ -19,8 +19,8 @@ class PostService {
         'price': postInfos['price'],
         'description': postInfos['description'],
         'categories': postInfos['categories'],
-        'keywords': postInfos['keywords'],
         'imageUrl': downloadURL,
+        'tags': null,
         'userId': FirebaseAuth.instance.currentUser!.uid.toString(),
         'comments': 0,
         'timeStamp': FieldValue.serverTimestamp()
@@ -45,7 +45,6 @@ class PostService {
           postInfos['price'].isEmpty ||
           postInfos['description'].isEmpty ||
           postInfos['categories'].isEmpty ||
-          postInfos['keywords'].isEmpty ||
           postInfos['imageFile'] == null) {
         return -1;
       }
@@ -70,7 +69,6 @@ class PostService {
         'price': postInfos['price'],
         'description': postInfos['description'],
         'categories': postInfos['categories'],
-        'keywords': postInfos['keywords'],
         'imageUrl': postInfos['imageFile'],
         'userId': FirebaseAuth.instance.currentUser!.uid.toString(),
       });
@@ -200,4 +198,42 @@ class PostService {
       return null;
     }
   }
+
+
+
+
+
+  ////////////////////////////////////////////////////GET TAGS////////////////////////////////////////////////////////////
+
+
+  //get all tags and return them as a list of maps, if error we return empty list
+  static Future<List<Map<String, dynamic>>> getAllTags() async {
+    List<Map<String, dynamic>> tagsList = [];
+
+    try {
+      CollectionReference tagsCollection = FirebaseFirestore.instance.collection('tags');
+      QuerySnapshot querySnapshot = await tagsCollection.get();
+
+      for (var doc in querySnapshot.docs) {
+        Map<String, dynamic> tagData = doc.data() as Map<String, dynamic>;
+        tagData['id'] = doc.id; // Add the document ID to the map
+        tagsList.add(tagData);
+      }
+
+      return tagsList;
+    } catch (e) {
+      print('Error getting tags: $e');
+      return [];
+    }
+
+
+  }
+
+
+
+
+
+
+
+
 }
